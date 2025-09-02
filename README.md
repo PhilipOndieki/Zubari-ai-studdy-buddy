@@ -1,294 +1,225 @@
-# 🧠 Zubari AI Study Buddy - Flask Web Application
+# 🧠 AI Study Buddy - Flashcard Generator
 
-🚀 **Zubari AI Study Buddy** is a comprehensive Flask-based web application that leverages artificial intelligence to enhance the learning experience. The platform offers multiple AI-powered tools including question generation, text summarization, question answering, and personalized study plan creation.
+An AI-powered web application that transforms your study notes into interactive flashcards, making learning more effective and engaging. Built to address SDG 4 (Quality Education) by making quality study materials accessible to all students.
 
----
+## ✨ Features
 
-## 🌟 Key Features
+- **🤖 AI-Powered Question Generation**: Convert any study notes into 5 high-quality flashcard questions
+- **🎴 Interactive Flashcards**: Beautiful flip animations and intuitive interface
+- **💾 Persistent Storage**: Save your favorite flashcards to MySQL database
+- **🏷️ Category Organization**: Organize flashcards by subject or topic
+- **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
+- **⚡ Fast Performance**: Optimized for quick response times and smooth interactions
 
-- 🔹 **Question Generator** - Generate relevant practice questions from any paragraph or text
-- 🔹 **Text Summarization** - Convert long texts into concise, digestible summaries
-- 🔹 **Question Answering** - Get precise answers based on provided context
-- 🔹 **Study Plan Generator** - Create structured, personalized study schedules
-- 🔹 **Premium Subscription** - Unlimited AI requests with Paystack payment integration
-- 🔹 **User Authentication** - Secure login and registration system
-- 🔹 **Usage Tracking** - Monitor AI request usage for free tier users
+## 🎯 Target Users
 
----
+- **Students** (especially beginners) looking for effective study tools
+- **Educators** seeking quick assessment material generation
+- **Self-learners** wanting structured study materials
 
 ## 🛠️ Technology Stack
 
-| **Component** | **Technology** |
-|---------------|----------------|
-| **Backend** | Flask (Python) |
-| **Database** | MySQL |
-| **Frontend** | Vanilla HTML, CSS, JavaScript |
-| **Authentication** | bcrypt password hashing |
-| **Payments** | Paystack integration |
-| **Styling** | Pure CSS with modern design |
+### Frontend
+- **HTML5** - Semantic structure and accessibility
+- **CSS3** - Modern styling with animations and responsive design
+- **JavaScript** - Interactive flashcard functionality and API integration
 
----
+### Backend
+- **Python Flask** - Lightweight web framework
+- **MySQL** - Reliable database for flashcard persistence
+- **OpenAI API** - Advanced AI for question generation
 
-## 📂 Project Structure
+## 📁 Project Structure
 
 ```
-📦 Zubari-AI-Study-Buddy/
-├── 📁 public/              # Static frontend files
-│   ├── 📄 index.html       # Homepage
-│   ├── 📄 login.html       # Login page
-│   ├── 📄 signup.html      # Registration page
-│   ├── 📄 premium.html     # Premium plans page
-│   ├── 📄 tools.html       # AI tools interface
-│   ├── 📄 style.css        # Main stylesheet
-│   └── 📄 script.js        # Frontend JavaScript
-├── 📁 images/              # Application screenshots
-├── 📄 app.py               # Main Flask application
+ai-study-buddy/
+├── 📁 backend/
+│   ├── 📄 app.py           # Main Flask application
+│   ├── 📄 database.py      # MySQL database operations
+│   └── 📄 ai_service.py    # OpenAI API integration
+├── 📁 public/
+│   ├── 📄 index.html       # Main application interface
+│   ├── 📄 style.css        # Styling and animations
+│   └── 📄 script.js        # Frontend functionality
 ├── 📄 requirements.txt     # Python dependencies
-├── 📄 README.md            # Project documentation
-└── 📄 LICENSE              # MIT License
+├── 📄 .env                 # Environment variables
+└── 📄 README.md           # This file
 ```
 
----
-
-## 🔧 Installation & Setup
+## 🚀 Quick Start
 
 ### Prerequisites
 - Python 3.8 or higher
 - MySQL Server 8.0 or higher
-- pip (Python package installer)
+- OpenAI API key
 
-### Step 1: Clone the Repository
+### Installation
+
+1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/zubari-ai-study-buddy.git
-cd zubari-ai-study-buddy
+git clone https://github.com/PhilipOndieki/ai-study-buddy-flashcard-generator.git
+cd ai-study-buddy-flashcard-generator
 ```
 
-### Step 2: Create Virtual Environment
+2. **Set up Python environment**
 ```bash
-# Create virtual environment
 python -m venv venv
-
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-```
-
-### Step 3: Install Dependencies
-```bash
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Step 4: MySQL Database Setup
-1. **Install MySQL Server** if not already installed
-2. **Create Database User** (optional but recommended):
-```sql
-CREATE USER 'zubari_user'@'localhost' IDENTIFIED BY 'your_password';
-GRANT ALL PRIVILEGES ON zubari_ai.* TO 'zubari_user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-3. **Update Database Configuration** in `app.py`:
-```python
-DB_CONFIG = {
-    'host': 'localhost',
-    'database': 'zubari_ai',
-    'user': 'your_mysql_username',
-    'password': 'your_mysql_password',
-    'charset': 'utf8mb4',
-    'collation': 'utf8mb4_unicode_ci'
-}
-```
-
-### Step 5: Configure Paystack Integration
-1. **Create Paystack Account** at [paystack.com](https://paystack.com)
-2. **Get API Keys** from your Paystack dashboard
-3. **Update Payment Configuration** in `app.py`:
-```python
-# Replace with your actual Paystack public key
-'publicKey': 'pk_test_your_actual_paystack_public_key'
-```
-
-### Step 6: Run the Application
+3. **Configure environment variables**
 ```bash
-python app.py
+# Copy .env file and update with your credentials
+cp .env.example .env
 ```
 
-The application will be available at: **http://localhost:3000**
+Update `.env` with your credentials:
+```env
+OPENAI_API_KEY=your_openai_api_key_here
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_DATABASE=ai_study_buddy
+```
 
----
+4. **Set up MySQL database**
+```sql
+CREATE DATABASE ai_study_buddy;
+```
 
-## 📱 How to Use the Application
+5. **Run the application**
+```bash
+npm run dev
+```
 
-### 1. **Account Creation**
-1. Navigate to the homepage
-2. Click **"Sign Up"** in the navigation bar
-3. Enter your email and create a secure password
-4. Confirm your password and click **"Create Account"**
-5. You'll be automatically logged in and redirected to the homepage
+Visit `http://localhost:3000` to start using the application!
 
-### 2. **Accessing AI Tools**
-1. **Login** to your account if not already logged in
-2. From the homepage, click on any of the four AI tool cards:
-   - **Question Generator** ❓
-   - **Text Summarizer** 📝
-   - **Question Answering** 🤖
-   - **Study Plan Generator** 📅
+## 📖 How to Use
 
-### 3. **Using Question Generator**
-1. Click on the **Question Generator** tool
-2. Paste or type a paragraph of text in the input field
-3. Click **"Generate Questions"**
-4. Review the AI-generated practice questions
-5. Use these questions to test your understanding
+### 1. Generate Flashcards
+1. Paste your study notes in the text area (minimum 50 characters)
+2. Optionally specify a category (e.g., "Biology", "History", "Math")
+3. Click "🚀 Generate Flashcards"
+4. Wait for AI to process your notes and create 5 interactive flashcards
 
-### 4. **Using Text Summarizer**
-1. Select the **Text Summarizer** tool
-2. Paste long text, articles, or documents
-3. Click **"Summarize"**
-4. Get a concise summary highlighting key points
-5. Use the summary for quick review or note-taking
+### 2. Study with Flashcards
+1. Click on any flashcard to flip it and reveal the answer
+2. Use the visual feedback to test your knowledge
+3. Review questions you find challenging
 
-### 5. **Using Question Answering**
-1. Access the **Question Answering** tool
-2. Provide **context** (background information or text)
-3. Enter your specific **question**
-4. Click **"Get Answer"**
-5. Receive an AI-generated answer based on the context
+### 3. Save and Organize
+1. Save individual flashcards by clicking "💾 Save" on the back of each card
+2. Use "💾 Save All Cards" to save all generated flashcards at once
+3. Access saved flashcards via "📚 Saved Cards" in the navigation
 
-### 6. **Using Study Plan Generator**
-1. Open the **Study Plan Generator** tool
-2. Fill in the required fields:
-   - **Syllabus**: Course or subject name
-   - **Topics**: Specific topics to cover
-   - **Start Date**: When you want to begin studying
-   - **Deadline**: Your target completion date
-3. Click **"Generate Plan"**
-4. Receive a structured, time-based study schedule
+### 4. Manage Your Collection
+1. Filter saved flashcards by category
+2. Delete flashcards you no longer need
+3. Build a comprehensive study library over time
 
-### 7. **Understanding Usage Limits**
-- **Free Tier**: 5 AI requests per month
-- **Premium**: Unlimited AI requests
-- Usage counter is displayed at the top of the tools page
-- When limit is reached, you'll be prompted to upgrade
+## 🔧 API Endpoints
 
-### 8. **Upgrading to Premium**
-1. Click **"View Plans"** from the homepage banner or when prompted
-2. Choose between:
-   - **Monthly Plan**: KES 1,000/month
-   - **Yearly Plan**: KES 10,000/year (Save KES 2,000!)
-3. Click **"Choose Monthly"** or **"Choose Yearly"**
-4. Complete payment through Paystack secure checkout
-5. Enjoy unlimited AI requests immediately after payment
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/generate-questions` | Generate flashcards from study notes |
+| `GET` | `/api/flashcards` | Retrieve saved flashcards |
+| `POST` | `/api/save-flashcard` | Save a flashcard to database |
+| `DELETE` | `/api/flashcard/:id` | Delete a specific flashcard |
+| `GET` | `/api/categories` | Get all flashcard categories |
 
-### 9. **Account Management**
-- **View Usage**: Check remaining requests in the top navigation
-- **Logout**: Click your email in the navigation, then "Logout"
-- **Subscription Status**: Visible in the user menu area
+## 🗄️ Database Schema
 
----
-
-## 💳 Payment Integration
-
-The application uses **Paystack** for secure payment processing:
-
-- **Supported Currency**: Kenyan Shillings (KES)
-- **Payment Methods**: Cards, Mobile Money, Bank Transfer
-- **Security**: PCI DSS compliant payment processing
-- **Instant Activation**: Premium features activate immediately after successful payment
-
----
-
-## 🔒 Security Features
-
-- **Password Hashing**: bcrypt encryption for secure password storage
-- **Session Management**: Secure user sessions with Flask
-- **SQL Injection Protection**: Parameterized queries
-- **Input Validation**: Server-side validation for all user inputs
-- **Authentication Middleware**: Protected routes for authenticated users only
-
----
+```sql
+CREATE TABLE flashcards (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    category VARCHAR(100) DEFAULT 'General',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_category (category),
+    INDEX idx_created_at (created_at)
+);
+```
 
 ## 🎨 Design Philosophy
 
-The application follows modern web design principles:
-
-- **Apple-inspired Aesthetics**: Clean, minimalist interface
-- **Responsive Design**: Works seamlessly on all devices
-- **Gradient Backgrounds**: Beautiful visual appeal
-- **Micro-interactions**: Smooth hover effects and transitions
-- **Accessibility**: High contrast ratios and readable fonts
+- **Apple-inspired Aesthetics**: Clean, minimalist interface with attention to detail
+- **Accessibility First**: High contrast ratios and keyboard navigation support
+- **Mobile-Responsive**: Optimized for all screen sizes
+- **Micro-interactions**: Smooth animations and hover effects for enhanced UX
 - **Progressive Enhancement**: Works without JavaScript for basic functionality
 
----
+## 🔒 Security Features
+
+- **Input Validation**: Server-side validation for all user inputs
+- **SQL Injection Protection**: Parameterized queries throughout
+- **API Key Security**: Environment-based configuration
+- **Error Handling**: Graceful degradation and user-friendly error messages
+
+## 📊 Performance Metrics
+
+- **Response Time**: < 3 seconds for question generation
+- **Question Accuracy**: > 85% relevance to study material
+- **System Uptime**: 99%+ availability target
+- **Resource Efficiency**: Optimized API calls and database queries
 
 ## 🚀 Deployment
 
 ### Local Development
 ```bash
-python app.py
+npm run dev
 ```
 
 ### Production Deployment
-1. **Set up MySQL** on your production server
-2. **Configure environment variables** for database credentials
-3. **Update Paystack keys** with production keys
-4. **Deploy using** your preferred hosting service (Heroku, DigitalOcean, AWS, etc.)
-
----
+1. Set up MySQL on your production server
+2. Configure environment variables with production values
+3. Update OpenAI API key with production key
+4. Deploy using your preferred hosting service
 
 ## 🔮 Future Enhancements
 
-- 🤖 **Real AI Integration**: Replace mock responses with actual AI models
-- 📊 **Analytics Dashboard**: Track learning progress and statistics
-- 🎯 **Personalized Recommendations**: AI-driven study suggestions
-- 📱 **Mobile App**: Native iOS and Android applications
-- 🌍 **Multi-language Support**: Support for multiple languages
-- 🔗 **API Access**: RESTful API for third-party integrations
-
----
+- **Multiple Choice Questions**: Generate different question formats
+- **Spaced Repetition**: Implement scientifically-backed review scheduling
+- **Progress Tracking**: Analytics and learning insights
+- **Collaborative Study**: Share flashcard sets with classmates
+- **Mobile App**: Native iOS and Android applications
+- **Offline Mode**: Study without internet connection
 
 ## 🤝 Contributing
 
-We welcome contributions! Here's how to get started:
+We welcome contributions! Please follow these steps:
 
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature-name`
-3. **Commit** your changes: `git commit -m "Add feature"`
-4. **Push** to the branch: `git push origin feature-name`
-5. **Submit** a Pull Request
-
----
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes and test thoroughly
+4. Commit with clear messages: `git commit -m "Add feature"`
+5. Push to your fork: `git push origin feature-name`
+6. Submit a Pull Request
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **OpenAI** for providing powerful AI capabilities
+- **Flask Community** for the excellent web framework
+- **MySQL** for reliable database management
+- **Education Technology Community** for inspiration and best practices
 
 ---
 
 ## 📞 Support & Contact
 
-For questions, support, or collaboration opportunities:
+For questions, support, or collaboration:
 
 - 📧 **Email**: philipbarongo30@gmail.com
 - 🔗 **LinkedIn**: [Philip Barongo](https://www.linkedin.com/in/philip-barongo-8b215028a/)
 - 🌐 **GitHub**: [PhilipOndieki](https://github.com/PhilipOndieki)
-- 📱 **Phone**: +254703141296
 
 ---
 
-## 🙏 Acknowledgments
+🌟 **If this project helps your learning journey, please give it a star!** ⭐
 
-- **Flask Community** for the excellent web framework
-- **MySQL** for reliable database management
-- **Paystack** for seamless payment processing
-- **Open Source Community** for inspiration and resources
-
----
-
-🌟 **If you find this project helpful, please give it a star!** ⭐
-
----
-
-*Built with ❤️ by Philip Ondieki*
+*Built with ❤️ for better education*

@@ -1,619 +1,428 @@
 // Global state
-let currentUser = null;
-let currentTool = null;
+let currentFlashcards = [];
+let savedFlashcards = [];
+let currentSection = 'generator';
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
-    checkAuthStatus();
     initializeEventListeners();
-    handleToolNavigation();
+    loadSavedFlashcards();
+    updateCharCounter();
+    showSection('generator');
 });
-
-// Authentication functions
-async function checkAuthStatus() {
-    try {
-        const response = await fetch('/api/user-status');
-        const data = await response.json();
-        
-        if (data.email) {
-            currentUser = data;
-            updateAuthUI(true);
-            updateUsageInfo();
-        } else {
-            updateAuthUI(false);
-        }
-    } catch (error) {
-        updateAuthUI(false);
-    }
-}
-
-function updateAuthUI(isLoggedIn) {
-    const loginBtn = document.getElementById('loginBtn');
-    const signupBtn = document.getElementById('signupBtn');
-    const userMenu = document.getElementById('userMenu');
-    const userEmail = document.getElementById('userEmail');
-
-    if (isLoggedIn && currentUser) {
-        if (loginBtn) loginBtn.classList.add('hidden');
-        if (signupBtn) signupBtn.classList.add('hidden');
-        if (userMenu) userMenu.classList.remove('hidden');
-        if (userEmail) userEmail.textContent = currentUser.email;
-    } else {
-        if (loginBtn) loginBtn.classList.remove('hidden');
-        if (signupBtn) signupBtn.classList.remove('hidden');
-        if (userMenu) userMenu.classList.add('hidden');
-    }
-}
-
-function updateUsageInfo() {
-    const usageInfo = document.getElementById('usageInfo');
-    const requestsRemaining = document.getElementById('requestsRemaining');
-    
-    if (usageInfo && requestsRemaining && currentUser) {
-        if (currentUser.isSubscribed) {
-            requestsRemaining.textContent = 'Premium: Unlimited requests';
-        } else {
-            requestsRemaining.textContent = `Free: ${currentUser.requestsRemaining} requests remaining`;
-        }
-        usageInfo.classList.remove('hidden');
-    }
-}
 
 // Event listeners
 function initializeEventListeners() {
-    // Navigation buttons
-    const loginBtn = document.getElementById('loginBtn');
-    const signupBtn = document.getElementById('signupBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const premiumBtn = document.getElementById('premiumBtn');
-
-    if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-            window.location.href = '/login.html';
-        });
-    }
-
-    if (signupBtn) {
-        signupBtn.addEventListener('click', () => {
-            window.location.href = '/signup.html';
-        });
-    }
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
-    }
-
-    if (premiumBtn) {
-        premiumBtn.addEventListener('click', () => {
-            window.location.href = '/premium.html';
-        });
-    }
-
-    // Tool boxes
-    const toolBoxes = document.querySelectorAll('.tool-box');
-    toolBoxes.forEach(box => {
-        box.addEventListener('click', () => {
-            const tool = box.getAttribute('data-tool');
-            if (tool) {
-                navigateToTool(tool);
-            }
-        });
-    });
-
-    // Auth forms
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-    }
-
-    if (signupForm) {
-        signupForm.addEventListener('submit', handleSignup);
-    }
-
-    // Tool forms
-    const questionForm = document.getElementById('questionForm');
-    const summarizerForm = document.getElementById('summarizerForm');
-    const qaForm = document.getElementById('qaForm');
-    const studyPlanForm = document.getElementById('studyPlanForm');
-
-    if (questionForm) {
-        questionForm.addEventListener('submit', handleQuestionGeneration);
-    }
-
-    if (summarizerForm) {
-        summarizerForm.addEventListener('submit', handleSummarization);
-    }
-
-    if (qaForm) {
-        qaForm.addEventListener('submit', handleQuestionAnswering);
-    }
-
-    if (studyPlanForm) {
-        studyPlanForm.addEventListener('submit', handleStudyPlanGeneration);
-    }
-
-    // Premium plan buttons
-    const planButtons = document.querySelectorAll('[data-plan]');
-    planButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const plan = e.target.getAttribute('data-plan');
-            initiatePremiumPayment(plan);
-        });
-    });
-
-    // Modal close
-    const modal = document.getElementById('upgradeModal');
-    const closeBtn = document.querySelector('.close');
+    // Navigation
+    const viewSavedBtn = document.getElementById('viewSavedBtn');
+    const categoriesBtn = document.getElementById('categoriesBtn');
+    const backToGeneratorBtn = document.getElementById('backToGeneratorBtn');
     
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
+    if (viewSavedBtn) {
+        viewSavedBtn.addEventListener('click', () => showSection('saved'));
     }
-
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.add('hidden');
-            }
-        });
+    
+    if (backToGeneratorBtn) {
+        backToGeneratorBtn.addEventListener('click', () => showSection('generator'));
+    }
+    
+    // Forms
+    const notesForm = document.getElementById('notesForm');
+    if (notesForm) {
+        notesForm.addEventListener('submit', handleNotesSubmission);
+    }
+    
+    // Character counter
+    const studyNotes = document.getElementById('studyNotes');
+    if (studyNotes) {
+        studyNotes.addEventListener('input', updateCharCounter);
+    }
+    
+    // Save all button
+    const saveAllBtn = document.getElementById('saveAllBtn');
+    if (saveAllBtn) {
+        saveAllBtn.addEventListener('click', saveAllFlashcards);
+    }
+    
+    // Category filter
+    const categoryFilter = document.getElementById('categoryFilter');
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', filterFlashcards);
     }
 }
 
-// Tool navigation
-function handleToolNavigation() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const tool = urlParams.get('tool');
+// Section management
+function showSection(section) {
+    const generatorSection = document.getElementById('generatorSection');
+    const savedSection = document.getElementById('savedSection');
     
-    if (tool) {
-        showTool(tool);
+    if (section === 'generator') {
+        generatorSection.classList.remove('hidden');
+        savedSection.classList.add('hidden');
+        currentSection = 'generator';
+    } else if (section === 'saved') {
+        generatorSection.classList.add('hidden');
+        savedSection.classList.remove('hidden');
+        currentSection = 'saved';
+        loadSavedFlashcards();
+        loadCategories();
     }
 }
 
-function navigateToTool(tool) {
-    if (!currentUser) {
-        window.location.href = '/login.html';
-        return;
-    }
+// Character counter
+function updateCharCounter() {
+    const studyNotes = document.getElementById('studyNotes');
+    const charCount = document.getElementById('charCount');
+    const generateBtn = document.getElementById('generateBtn');
     
-    window.location.href = `/tools.html?tool=${tool}`;
-}
-
-function showTool(tool) {
-    // Hide all tool sections
-    const toolSections = document.querySelectorAll('.tool-section');
-    toolSections.forEach(section => section.classList.add('hidden'));
-    
-    // Show selected tool
-    const selectedTool = document.getElementById(tool);
-    if (selectedTool) {
-        selectedTool.classList.remove('hidden');
-        currentTool = tool;
+    if (studyNotes && charCount) {
+        const count = studyNotes.value.length;
+        charCount.textContent = count;
         
-        // Update title
-        const toolTitle = document.getElementById('toolTitle');
-        if (toolTitle) {
-            const titles = {
-                'question-generator': 'Question Generator',
-                'summarizer': 'Text Summarizer',
-                'qa': 'Question Answering',
-                'study-plan': 'Study Plan Generator'
-            };
-            toolTitle.textContent = titles[tool] || 'AI Study Tools';
-        }
-    }
-}
-
-// Authentication handlers
-async function handleLogin(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            window.location.href = '/';
+        const counter = charCount.parentElement;
+        if (count >= 50) {
+            counter.classList.add('valid');
+            if (generateBtn) generateBtn.disabled = false;
         } else {
-            showError(data.error);
+            counter.classList.remove('valid');
+            if (generateBtn) generateBtn.disabled = true;
         }
-    } catch (error) {
-        showError('Login failed. Please try again.');
     }
 }
 
-async function handleSignup(e) {
+// Handle notes submission
+async function handleNotesSubmission(e) {
     e.preventDefault();
     
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+    const studyNotes = document.getElementById('studyNotes').value.trim();
+    const category = document.getElementById('category').value.trim() || 'General';
+    const generateBtn = document.getElementById('generateBtn');
+    const btnText = generateBtn.querySelector('.btn-text');
+    const btnLoading = generateBtn.querySelector('.btn-loading');
     
-    if (password !== confirmPassword) {
-        showError('Passwords do not match');
+    if (studyNotes.length < 50) {
+        showMessage('Please provide at least 50 characters of study notes', 'error');
         return;
     }
     
     try {
-        const response = await fetch('/api/signup', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            window.location.href = '/';
-        } else {
-            showError(data.error);
-        }
-    } catch (error) {
-        showError('Signup failed. Please try again.');
-    }
-}
-
-async function logout() {
-    try {
-        await fetch('/api/logout', { method: 'POST' });
-        currentUser = null;
-        window.location.href = '/';
-    } catch (error) {
-        console.error('Logout failed:', error);
-    }
-}
-
-// AI tool handlers
-async function handleQuestionGeneration(e) {
-    e.preventDefault();
-    
-    const paragraph = document.getElementById('paragraph').value;
-    const resultsDiv = document.getElementById('questionResults');
-    
-    if (!paragraph.trim()) {
-        showError('Please enter a paragraph');
-        return;
-    }
-    
-    try {
-        setLoading(e.target, true);
+        // Show loading state
+        generateBtn.disabled = true;
+        btnText.classList.add('hidden');
+        btnLoading.classList.remove('hidden');
         
         const response = await fetch('/api/generate-questions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ paragraph })
+            body: JSON.stringify({ notes: studyNotes })
         });
         
         const data = await response.json();
         
-        if (data.requiresUpgrade) {
-            showUpgradeModal();
-            return;
-        }
-        
         if (data.error) {
-            showError(data.error);
+            showMessage(data.error, 'error');
             return;
         }
         
-        displayQuestions(data.questions, resultsDiv);
-        await checkAuthStatus(); // Update usage info
+        // Store current flashcards with category
+        currentFlashcards = data.questions.map(q => ({
+            ...q,
+            category: category,
+            saved: false
+        }));
+        
+        displayFlashcards(currentFlashcards);
+        showMessage('Flashcards generated successfully!', 'success');
         
     } catch (error) {
-        showError('Failed to generate questions. Please try again.');
+        console.error('Error generating questions:', error);
+        showMessage('Failed to generate flashcards. Please try again.', 'error');
     } finally {
-        setLoading(e.target, false);
+        // Reset button state
+        generateBtn.disabled = false;
+        btnText.classList.remove('hidden');
+        btnLoading.classList.add('hidden');
     }
 }
 
-async function handleSummarization(e) {
-    e.preventDefault();
+// Display flashcards
+function displayFlashcards(flashcards, container = 'flashcardsGrid') {
+    const grid = document.getElementById(container);
+    const flashcardsContainer = document.getElementById('flashcardsContainer');
     
-    const text = document.getElementById('textToSummarize').value;
-    const resultsDiv = document.getElementById('summaryResults');
+    if (!grid) return;
     
-    if (!text.trim()) {
-        showError('Please enter text to summarize');
+    if (flashcards.length === 0) {
+        if (container === 'savedFlashcardsGrid') {
+            document.getElementById('noSavedCards').classList.remove('hidden');
+        }
         return;
     }
     
-    try {
-        setLoading(e.target, true);
-        
-        const response = await fetch('/api/summarize', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ text })
-        });
-        
-        const data = await response.json();
-        
-        if (data.requiresUpgrade) {
-            showUpgradeModal();
-            return;
-        }
-        
-        if (data.error) {
-            showError(data.error);
-            return;
-        }
-        
-        displaySummary(data.summary, resultsDiv);
-        await checkAuthStatus(); // Update usage info
-        
-    } catch (error) {
-        showError('Failed to summarize text. Please try again.');
-    } finally {
-        setLoading(e.target, false);
-    }
-}
-
-async function handleQuestionAnswering(e) {
-    e.preventDefault();
-    
-    const context = document.getElementById('context').value;
-    const question = document.getElementById('question').value;
-    const resultsDiv = document.getElementById('qaResults');
-    
-    if (!context.trim() || !question.trim()) {
-        showError('Please provide both context and question');
-        return;
+    if (container === 'savedFlashcardsGrid') {
+        document.getElementById('noSavedCards').classList.add('hidden');
     }
     
-    try {
-        setLoading(e.target, true);
-        
-        const response = await fetch('/api/answer-question', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ context, question })
-        });
-        
-        const data = await response.json();
-        
-        if (data.requiresUpgrade) {
-            showUpgradeModal();
-            return;
-        }
-        
-        if (data.error) {
-            showError(data.error);
-            return;
-        }
-        
-        displayAnswer(data.answer, resultsDiv);
-        await checkAuthStatus(); // Update usage info
-        
-    } catch (error) {
-        showError('Failed to answer question. Please try again.');
-    } finally {
-        setLoading(e.target, false);
-    }
-}
-
-async function handleStudyPlanGeneration(e) {
-    e.preventDefault();
+    grid.innerHTML = flashcards.map((flashcard, index) => `
+        <div class="flashcard" data-index="${index}" data-id="${flashcard.id || ''}">
+            <div class="flashcard-inner">
+                <div class="flashcard-front">
+                    <div class="flashcard-content">
+                        <h3>${escapeHtml(flashcard.question)}</h3>
+                    </div>
+                    <div class="flashcard-footer">
+                        Click to reveal answer
+                    </div>
+                </div>
+                <div class="flashcard-back">
+                    <div class="flashcard-content">
+                        <p>${escapeHtml(flashcard.answer)}</p>
+                    </div>
+                    <div class="flashcard-footer">
+                        <div>Category: ${escapeHtml(flashcard.category)}</div>
+                        <div class="flashcard-actions">
+                            ${flashcard.saved ? 
+                                '<span class="saved-indicator">✓ Saved</span>' : 
+                                '<button class="action-btn save-btn" onclick="saveFlashcard(' + index + ')">💾 Save</button>'
+                            }
+                            ${flashcard.id ? 
+                                '<button class="action-btn delete-btn" onclick="deleteFlashcard(' + flashcard.id + ')">🗑️ Delete</button>' : 
+                                ''
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
     
-    const syllabus = document.getElementById('syllabus').value;
-    const topics = document.getElementById('topics').value;
-    const startDate = document.getElementById('startDate').value;
-    const deadline = document.getElementById('deadline').value;
-    const resultsDiv = document.getElementById('studyPlanResults');
-    
-    if (!syllabus.trim() || !topics.trim() || !startDate || !deadline) {
-        showError('Please fill in all fields');
-        return;
-    }
-    
-    try {
-        setLoading(e.target, true);
-        
-        const response = await fetch('/api/generate-study-plan', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ syllabus, topics, startDate, deadline })
-        });
-        
-        const data = await response.json();
-        
-        if (data.requiresUpgrade) {
-            showUpgradeModal();
-            return;
-        }
-        
-        if (data.error) {
-            showError(data.error);
-            return;
-        }
-        
-        displayStudyPlan(data.studyPlan, resultsDiv);
-        await checkAuthStatus(); // Update usage info
-        
-    } catch (error) {
-        showError('Failed to generate study plan. Please try again.');
-    } finally {
-        setLoading(e.target, false);
-    }
-}
-
-// Display functions
-function displayQuestions(questions, container) {
-    container.innerHTML = `
-        <h3>Generated Questions</h3>
-        <ul class="questions-list">
-            ${questions.map(q => `<li>${q}</li>`).join('')}
-        </ul>
-    `;
-    container.classList.remove('hidden');
-}
-
-function displaySummary(summary, container) {
-    container.innerHTML = `
-        <h3>Summary</h3>
-        <div class="summary-text">${summary}</div>
-    `;
-    container.classList.remove('hidden');
-}
-
-function displayAnswer(answer, container) {
-    container.innerHTML = `
-        <h3>Answer</h3>
-        <div class="answer-text">${answer}</div>
-    `;
-    container.classList.remove('hidden');
-}
-
-function displayStudyPlan(studyPlan, container) {
-    container.innerHTML = `
-        <h3>Your Study Plan</h3>
-        <div class="study-plan-text">${studyPlan}</div>
-    `;
-    container.classList.remove('hidden');
-}
-
-// Payment functions
-async function initiatePremiumPayment(plan) {
-    if (!currentUser) {
-        window.location.href = '/login.html';
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/initiate-payment', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ subscriptionType: plan })
-        });
-        
-        const data = await response.json();
-        
-        if (data.error) {
-            showError(data.error);
-            return;
-        }
-        
-        // Initialize Paystack payment
-        const handler = PaystackPop.setup({
-            key: data.publicKey,
-            email: currentUser.email,
-            amount: data.amount * 100, // Convert to kobo
-            currency: 'KES',
-            ref: data.paymentReference,
-            callback: function(response) {
-                verifyPayment(response.reference);
-            },
-            onClose: function() {
-                console.log('Payment cancelled');
+    // Add click listeners for flipping
+    const flashcardElements = grid.querySelectorAll('.flashcard');
+    flashcardElements.forEach(card => {
+        card.addEventListener('click', (e) => {
+            // Don't flip if clicking on action buttons
+            if (e.target.classList.contains('action-btn')) {
+                e.stopPropagation();
+                return;
             }
+            card.classList.toggle('flipped');
         });
+    });
+    
+    // Show flashcards container
+    if (flashcardsContainer && container === 'flashcardsGrid') {
+        flashcardsContainer.classList.remove('hidden');
         
-        handler.openIframe();
-        
-    } catch (error) {
-        showError('Failed to initiate payment. Please try again.');
+        // Smooth scroll to flashcards
+        setTimeout(() => {
+            flashcardsContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }, 100);
     }
 }
 
-async function verifyPayment(reference) {
+// Save individual flashcard
+async function saveFlashcard(index) {
+    const flashcard = currentFlashcards[index];
+    
     try {
-        const response = await fetch('/api/verify-payment', {
+        const response = await fetch('/api/save-flashcard', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ paymentReference: reference })
+            body: JSON.stringify({
+                question: flashcard.question,
+                answer: flashcard.answer,
+                category: flashcard.category
+            })
         });
         
         const data = await response.json();
         
         if (data.success) {
-            showSuccess('Payment successful! Your premium subscription is now active.');
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 2000);
+            currentFlashcards[index].saved = true;
+            currentFlashcards[index].id = data.id;
+            displayFlashcards(currentFlashcards);
+            showMessage('Flashcard saved successfully!', 'success');
         } else {
-            showError('Payment verification failed. Please contact support.');
+            showMessage(data.error || 'Failed to save flashcard', 'error');
         }
+        
     } catch (error) {
-        showError('Payment verification failed. Please try again.');
+        console.error('Error saving flashcard:', error);
+        showMessage('Failed to save flashcard. Please try again.', 'error');
+    }
+}
+
+// Save all flashcards
+async function saveAllFlashcards() {
+    const unsavedCards = currentFlashcards.filter(card => !card.saved);
+    
+    if (unsavedCards.length === 0) {
+        showMessage('All flashcards are already saved!', 'success');
+        return;
+    }
+    
+    try {
+        const savePromises = unsavedCards.map(async (card, originalIndex) => {
+            const index = currentFlashcards.findIndex(c => c === card);
+            const response = await fetch('/api/save-flashcard', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    question: card.question,
+                    answer: card.answer,
+                    category: card.category
+                })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                currentFlashcards[index].saved = true;
+                currentFlashcards[index].id = data.id;
+            }
+            return data.success;
+        });
+        
+        const results = await Promise.all(savePromises);
+        const successCount = results.filter(Boolean).length;
+        
+        displayFlashcards(currentFlashcards);
+        showMessage(`${successCount} flashcard(s) saved successfully!`, 'success');
+        
+    } catch (error) {
+        console.error('Error saving flashcards:', error);
+        showMessage('Failed to save some flashcards. Please try again.', 'error');
+    }
+}
+
+// Load saved flashcards
+async function loadSavedFlashcards() {
+    try {
+        const response = await fetch('/api/flashcards');
+        const data = await response.json();
+        
+        if (data.flashcards) {
+            savedFlashcards = data.flashcards.map(card => ({
+                ...card,
+                saved: true
+            }));
+            displayFlashcards(savedFlashcards, 'savedFlashcardsGrid');
+        }
+        
+    } catch (error) {
+        console.error('Error loading saved flashcards:', error);
+        showMessage('Failed to load saved flashcards', 'error');
+    }
+}
+
+// Load categories
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter && data.categories) {
+            categoryFilter.innerHTML = '<option value="">All Categories</option>' +
+                data.categories.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join('');
+        }
+        
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+// Filter flashcards by category
+function filterFlashcards() {
+    const categoryFilter = document.getElementById('categoryFilter');
+    const selectedCategory = categoryFilter.value;
+    
+    const filteredCards = selectedCategory 
+        ? savedFlashcards.filter(card => card.category === selectedCategory)
+        : savedFlashcards;
+    
+    displayFlashcards(filteredCards, 'savedFlashcardsGrid');
+}
+
+// Delete flashcard
+async function deleteFlashcard(flashcardId) {
+    if (!confirm('Are you sure you want to delete this flashcard?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/flashcard/${flashcardId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Remove from current flashcards if present
+            currentFlashcards = currentFlashcards.filter(card => card.id !== flashcardId);
+            
+            // Reload saved flashcards
+            await loadSavedFlashcards();
+            showMessage('Flashcard deleted successfully!', 'success');
+        } else {
+            showMessage(data.error || 'Failed to delete flashcard', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error deleting flashcard:', error);
+        showMessage('Failed to delete flashcard. Please try again.', 'error');
     }
 }
 
 // Utility functions
-function setLoading(element, isLoading) {
-    if (isLoading) {
-        element.classList.add('loading');
-        element.disabled = true;
-    } else {
-        element.classList.remove('loading');
-        element.disabled = false;
-    }
-}
-
-function showError(message) {
-    const errorDiv = document.getElementById('errorMessage');
-    if (errorDiv) {
-        errorDiv.textContent = message;
-        errorDiv.classList.remove('hidden');
-        setTimeout(() => {
-            errorDiv.classList.add('hidden');
-        }, 5000);
-    } else {
-        alert(message);
-    }
-}
-
-function showSuccess(message) {
-    // Create or update success message element
-    let successDiv = document.getElementById('successMessage');
-    if (!successDiv) {
-        successDiv = document.createElement('div');
-        successDiv.id = 'successMessage';
-        successDiv.className = 'success-message';
-        document.body.appendChild(successDiv);
-    }
+function showMessage(message, type = 'success') {
+    const container = document.getElementById('messageContainer');
     
-    successDiv.textContent = message;
-    successDiv.classList.remove('hidden');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.textContent = message;
     
+    container.appendChild(messageDiv);
+    
+    // Auto-remove after 5 seconds
     setTimeout(() => {
-        successDiv.classList.add('hidden');
+        if (messageDiv.parentNode) {
+            messageDiv.parentNode.removeChild(messageDiv);
+        }
     }, 5000);
 }
 
-function showUpgradeModal() {
-    const modal = document.getElementById('upgradeModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-    }
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
-// URL parameter handling for tools page
-function getUrlParameter(name) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(name);
+// Initialize character counter on page load
+function updateCharCounter() {
+    const studyNotes = document.getElementById('studyNotes');
+    const charCount = document.getElementById('charCount');
+    const generateBtn = document.getElementById('generateBtn');
+    
+    if (studyNotes && charCount) {
+        const count = studyNotes.value.length;
+        charCount.textContent = count;
+        
+        const counter = charCount.parentElement;
+        if (count >= 50) {
+            counter.classList.add('valid');
+            if (generateBtn) generateBtn.disabled = false;
+        } else {
+            counter.classList.remove('valid');
+            if (generateBtn) generateBtn.disabled = true;
+        }
+    }
 }

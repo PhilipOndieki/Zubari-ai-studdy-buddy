@@ -1,24 +1,30 @@
 {
-  "name": "zubari-ai-study-buddy-flask",
+  "name": "ai-study-buddy-flashcard-generator",
   "version": "1.0.0",
-  "description": "Flask-based AI Study Assistant with Premium Features and MySQL Database",
+  "description": "AI-powered flashcard generator that transforms study notes into interactive learning materials",
   "main": "app.py",
   "scripts": {
-    "dev": "python app.py",
-    "start": "python app.py"
+    "dev": "cd backend && python app.py",
+    "start": "cd backend && python app.py"
   },
   "keywords": [
     "ai",
-    "study",
+    "flashcards",
     "education",
+    "study",
     "flask",
     "mysql",
-    "paystack"
+    "openai"
   ],
   "author": "Philip Ondieki",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/PhilipOndieki/zubari-ai-study-buddy.git"
+    "url": "https://github.com/PhilipOndieki/ai-study-buddy-flashcard-generator.git"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "mysql2": "^3.14.4",
+    "openai": "^5.16.0"
   }
 }
